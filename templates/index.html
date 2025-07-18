@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Credit Risk Predictor</title>
+    <script>
+        function calculateLoanPercentIncome() {
+            const income = parseFloat(document.getElementsByName("person_income")[0].value);
+            const loanAmount = parseFloat(document.getElementsByName("loan_amnt")[0].value);
+
+            if (!isNaN(income) && income !== 0 && !isNaN(loanAmount)) {
+                const percent = loanAmount / income;
+                document.getElementById("loan_percent_display").innerText = (percent * 100).toFixed(2) + "%";
+            } else {
+                document.getElementById("loan_percent_display").innerText = "";
+            }
+        }
+
+        window.onload = () => {
+            document.getElementsByName("person_income")[0].addEventListener('input', calculateLoanPercentIncome);
+            document.getElementsByName("loan_amnt")[0].addEventListener('input', calculateLoanPercentIncome);
+        };
+    </script>
+</head>
+<body>
+    <h1>Credit Risk Prediction</h1>
+    <form method="POST" action="/predict">
+        Age: <input type="number" name="person_age" required><br>
+        Income: <input type="number" name="person_income" step="0.01" required><br>
+        Employment Length: <input type="number" name="person_emp_length" step="0.1"><br>
+
+        Loan Grade:
+        <select name="loan_grade">
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="D">D</option>
+            <option value="E">E</option>
+            <option value="F">F</option>
+            <option value="G">G</option>
+        </select><br>
+
+        Home Ownership:
+        <select name="person_home_ownership">
+            <option value="MORTGAGE">MORTGAGE</option>
+            <option value="RENT">RENT</option>
+            <option value="OWN">OWN</option>
+            <option value="OTHER">OTHER</option>
+        </select><br>
+
+        Loan Intent:
+        <select name="loan_intent">
+            <option value="EDUCATION">EDUCATION</option>
+            <option value="PERSONAL">PERSONAL</option>
+            <option value="MEDICAL">MEDICAL</option>
+            <option value="VENTURE">VENTURE</option>
+            <option value="HOMEIMPROVEMENT">HOMEIMPROVEMENT</option>
+            <option value="DEBTCONSOLIDATION">DEBTCONSOLIDATION</option>
+        </select><br>
+
+        Loan Amount: <input type="number" name="loan_amnt" step="0.01" required><br>
+        Interest Rate: <input type="number" name="loan_int_rate" step="0.01"><br>
+        <div>Loan % of Income (auto): <span id="loan_percent_display"></span></div>
+
+        Default on File (0 or 1): <input type="number" name="cb_person_default_on_file" min="0" max="1"><br>
+        Credit History Length: <input type="number" name="cb_person_cred_hist_length"><br>
+
+        <input type="submit" value="Predict Credit Risk">
+    </form>
+
+    {% if prediction is not none %}
+        <h2>Prediction: {{ prediction }}</h2>
+        <p>Probability of default: {{ proba }}</p>
+    {% endif %}
+</body>
+</html>
