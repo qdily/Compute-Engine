@@ -1,9 +1,35 @@
 from flask import Flask, render_template, request
 import joblib
 import pandas as pd
+import os
 
 app = Flask(__name__)
-model = joblib.load('model/credit_risk_model.pkl')  # adjust path if needed
+
+# Global variable to store the model
+model = None
+
+def load_model():
+    """Load the model with proper error handling"""
+    global model
+    try:
+        model_path = 'model/credit_risk_model.pkl'
+        if os.path.exists(model_path):
+            model = joblib.load(model_path)
+            print("Model loaded successfully")
+            return True
+        else:
+            print(f"Model file not found at {model_path}")
+            print(f"Current working directory: {os.getcwd()}")
+            print(f"Files in current directory: {os.listdir('.')}")
+            if os.path.exists('model'):
+                print(f"Files in model directory: {os.listdir('model')}")
+            return False
+    except Exception as e:
+        print(f"Error loading model: {e}")
+        return False
+
+# Try to load the model when the app starts
+model_loaded = load_model()
 
 @app.route('/')
 def home():
@@ -11,6 +37,13 @@ def home():
 
 @app.route('/predict', methods=['POST'])
 def predict():
+    # Check if model is loaded
+    if model is None:
+        return render_template('index.html', 
+                             prediction=None, 
+                             proba=None, 
+                             error="Model not available. Please check server logs.")
+    
     data = request.form
 
     try:
@@ -44,7 +77,20 @@ def predict():
         return render_template('index.html', prediction=pred, proba=round(proba, 3))
 
     except Exception as e:
-        return f"Error: {str(e)}"
+        return render_template('index.html', 
+                             prediction=None, 
+                             proba=None, 
+                             error=f"Prediction error: {str(e)}")
+
+@app.route('/health')
+def health():
+    """Health check endpoint"""
+    status = {
+        'status': 'healthy' if model is not None else 'unhealthy',
+        'model_loaded': model is not None,
+        'working_directory': os.getcwd()
+    }
+    return status
 
 if __name__ == '__main__':
     app.run(debug=True)
